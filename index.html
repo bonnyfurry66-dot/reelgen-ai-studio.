@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ReelGen — AI Video Studio</title>
+<style>
+:root{--bg:#f6f5fb;--card:#fff;--ink:#1b1730;--mut:#625e7e;--line:#e2dff0;--acc:#6d4aff;--pink:#ff4f9a;--ok:#15803d;--err:#c2263a;color-scheme:light}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f0d1a;--card:#1a1730;--ink:#f1effc;--mut:#a09cbf;--line:#2f2a52;--ok:#4ade80;--err:#ff7a8a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f0d1a;--card:#1a1730;--ink:#f1effc;--mut:#a09cbf;--line:#2f2a52;--ok:#4ade80;--err:#ff7a8a;color-scheme:dark}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+[hidden]{display:none!important}
+.wrap{max-width:560px;margin:0 auto;padding:14px 16px 40px}
+header{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:40px}
+.logo{font-weight:800;font-size:20px}
+.logo em{font-style:normal;font-size:12px;background:#15803d;color:#fff;border-radius:99px;padding:2px 8px;margin-left:6px;vertical-align:middle}
+#who{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--mut)}
+h1{font-size:26px;line-height:1.15;margin:18px 0 6px}
+h2{font-size:18px;margin:0 0 10px}.h2{margin:22px 0 2px}
+.sub,.note,small{color:var(--mut)}.sub{margin:0 0 6px}.note{font-size:13px;margin:8px 0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin:12px 0}
+label,.lbl{display:block;font-size:14px;font-weight:600;margin:12px 0 6px}
+input,textarea{width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px}
+textarea{resize:vertical}
+input:focus,textarea:focus,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+input[type=range]{padding:0;border:0;background:none;accent-color:var(--acc)}
+button{font:inherit;color:inherit;cursor:pointer}
+.btn{width:100%;margin-top:14px;border:0;border-radius:12px;padding:14px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--acc),var(--pink))}
+.btn:disabled{opacity:.55;cursor:default}
+.ghost{background:none;border:1px solid var(--line);border-radius:10px;padding:6px 10px}
+.tabs,.seg{display:flex;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:4px}
+.tabs button,.seg button{flex:1;border:0;background:none;border-radius:9px;padding:9px 4px;font-weight:600;display:flex;flex-direction:column;align-items:center}
+.tabs .on,.seg .on{background:var(--acc);color:#fff}
+.seg small{font-weight:400;color:inherit;opacity:.8;font-size:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sty{text-align:left;background:var(--bg);border:2px solid var(--line);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:2px}
+.sty span{font-size:24px}.sty small{font-size:12px;line-height:1.3}.sty.on{border-color:var(--acc)}
+.ends{display:flex;justify-content:space-between;font-size:12px;color:var(--mut)}
+.err{color:var(--err);font-size:14px;min-height:1em;margin:8px 0 0}
+.vid{display:flex;gap:12px;align-items:center;position:relative}
+.tile{flex:none;width:84px;height:64px;border-radius:12px;display:grid;place-items:center;font-size:32px}
+.tile span{display:inline-block;animation:bob 1.1s ease-in-out infinite}.tile.done span{animation:none}
+@keyframes bob{50%{transform:translateY(-6px)}}
+@media(prefers-reduced-motion:reduce){.tile span{animation:none}}
+.info{flex:1;min-width:0}
+.t{font-weight:600;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;padding-right:22px;overflow-wrap:anywhere}
+.chips{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.chips i{font-style:normal;font-size:12px;border:1px solid var(--line);border-radius:99px;padding:1px 8px;color:var(--mut)}
+.bar{height:6px;border-radius:9px;background:var(--line);overflow:hidden;margin-bottom:4px}
+.bar b{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--pink))}
+.ok{color:var(--ok)}
+.x{position:absolute;top:8px;right:8px;border:0;background:none;color:var(--mut);padding:4px 6px}
+#cv{width:100%;height:auto;aspect-ratio:16/9;border-radius:12px;background:#000;display:block}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px}
+.acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}.acts .ghost{font-size:13px;padding:5px 10px}
+#pl{position:fixed;inset:0;z-index:20;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 16px)}
+#pl video{width:100%;max-width:900px;border-radius:12px;background:#000}
+#pl .ghost{color:#fff;border-color:#666}
+.dl{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.dn{min-width:0;display:flex;flex-direction:column}
+.dn b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:14px}
+.dn small{font-size:12px}
+</style>
+</head>
+<body>
+<main class="wrap">
+<header>
+  <div class="logo">▶ ReelGen <em>Studio</em></div>
+  <div id="who" hidden><span id="hi"></span><button id="out" class="ghost">Log out</button></div>
+</header>
+
+<section id="auth" hidden>
+  <h1>Turn a prompt into a video</h1>
+  <p class="sub">Create complete stories, plan scenes, choose natural voices and generate videos with connected AI services.</p>
+  <div class="card">
+    <div class="tabs"><button id="tSign" class="on">Sign up</button><button id="tLog">Log in</button></div>
+    <label id="nameRow">Name<input id="name" autocomplete="name"></label>
+    <label>Email<input id="email" type="email" autocomplete="email" inputmode="email"></label>
+    <label>Password<input id="pw" type="password" placeholder="At least 8 characters"></label>
+    <p id="err" class="err" role="alert"></p>
+    <button id="go" class="btn">Create free account</button>
+    <p class="note">Accounts use secure server-side authentication. Passwords are never saved in this browser.</p>
+  </div>
+</section>
+
+<section id="app" hidden>
+  <div class="card">
+    <h2>Create a video</h2>
+    <label for="prompt">Your idea or prompt</label>
+    <textarea id="prompt" rows="4" maxlength="3000" placeholder="A watermelon king discovers that the banana spy is his long-lost brother…"></textarea>
+    <div class="lbl">Visual style</div><div id="styles" class="grid"></div>
+    <div class="lbl">Length: <span id="lenV"></span></div>
+    <input id="len" type="range" min="15" max="180" step="15" value="60" aria-label="Video length">
+    <div class="ends"><span>15 s</span><span>3 min</span></div>
+    <div class="lbl">Quality</div><div id="qs" class="seg"></div>
+    <div class="lbl">Narrator voice</div><div id="vs" class="seg"></div>
+    <label for="language">Narration language</label>
+    <select id="language" style="width:100%;font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px">
+      <option value="en">English</option><option value="sw">Kiswahili</option><option value="fr">French</option><option value="es">Spanish</option><option value="ar">Arabic</option><option value="hi">Hindi</option><option value="pt">Portuguese</option><option value="zh">Chinese</option>
+    </select>
+    <div class="row"><button id="writeStory" class="ghost" style="flex:1">Write story & scenes</button><button id="previewScript" class="ghost" style="flex:1">Preview script</button></div>
+    <section id="scriptPanel" class="card" hidden><h2>Story & scene plan</h2><div id="scriptContent"></div><button id="useScript" class="btn">Use this script</button></section>
+    <label for="script">Editable story script</label>
+    <textarea id="script" rows="8" maxlength="12000" placeholder="Generate a story from your prompt, or write scenes and dialogue here…"></textarea>
+    <p class="note">Real AI story writing, video generation and natural speech require a connected server. Keep all provider API keys on the server, never in this HTML.</p>
+    <button id="gen" class="btn">Generate AI video</button>
+    <p id="hint" class="err" role="alert"></p>
+  </div>
+  <div id="stage" class="card" hidden>
+    <canvas id="cv" width="1280" height="720" aria-label="Live render preview"></canvas>
+    <div class="row"><small id="st">Rendering…</small><button id="cancel" class="ghost">Cancel</button></div>
+    <p class="note">Your video renders live in this browser, so keep this tab open and visible until it finishes.</p>
+  </div>
+  <h2 class="h2">My videos</h2>
+  <p class="note">Videos are made by ReelGen’s built-in engine in your browser. Use Download to keep them.</p>
+  <div id="list"></div>
+  <h2 class="h2">Downloads</h2>
+  <div id="dls" class="card"></div>
+<section class="card"><h2>Backend connection</h2>
+<p class="note">Set API.base to your HTTPS backend. Required routes: POST /api/auth/register, POST /api/auth/login, GET /api/auth/me, POST /api/auth/logout, POST /api/story, GET/POST /api/videos and GET /api/videos/:id. The server must connect the AI story, video and speech providers, store videos in cloud object storage, and implement library deletion. Keep provider API keys server-side only.</p>
+<p class="note">Story response: {title, logline, script, scenes:[{title,visual,dialogue}]}. Video response: {id,status,progress,downloadUrl}.</p></section>
+</section>
+</main>
+<div id="pl" hidden><button id="plx" class="ghost">Close</button><video id="plv" controls playsinline></video></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const h=(t,a={},...c)=>{const e=document.createElement(t);for(const k in a){if(k==='class')e.className=a[k];else if(k.startsWith('on'))e.addEventListener(k.slice(2),a[k]);else e.setAttribute(k,a[k])}for(const x of c.flat())e.append(x);return e};
+// Configure API.base with your HTTPS backend URL before deployment.
+const API={base:"",routes:{me:"/api/auth/me",signup:"/api/auth/register",login:"/api/auth/login",logout:"/api/auth/logout",story:"/api/story",videos:"/api/videos",video:id=>"/api/videos/"+encodeURIComponent(id)}};
+const apiUrl=path=>API.base.replace(/\/$/,"")+path;
+async function api(path,options={}){
+  const res=await fetch(apiUrl(path),{credentials:"include",headers:{"Content-Type":"application/json",...(options.headers||{})},...options});
+  const data=res.status===204?null:await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data?.error||data?.message||("Server error "+res.status));
+  return data;
+}
+const backendReady=()=>!!API.base;
+const mem={};
+const S={get(k){try{const v=localStorage.getItem(k);return v==null?(mem[k]??null):JSON.parse(v)}catch(e){return mem[k]??null}},set(k,v){mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const STYLES={
+  fruits:{n:'AI Fruits',e:'🍓',g:'#ff7a59,#ff3d8b',d:'Fruit characters in dramatic stories'},
+  anime:{n:'Anime',e:'⚡',g:'#5b8cff,#b04bff',d:'Bold action, big emotions'},
+  stick:{n:'Stick Figure',e:'🚶',g:'#4b5563,#9ca3af',d:'Simple, funny line-drawn shorts'},
+  movie:{n:'Animated Movie',e:'🎬',g:'#f59e0b,#ef4444',d:'Cinematic multi-scene stories'}
+};
+let me=null,mode='signup',style='fruits',q=1080,P=[],timer=null;
+let cloudVideos=[];
+const fmtLen=s=>s<60?s+' s':Math.floor(s/60)+' min'+(s%60?' '+s%60+' s':'');
+const save=()=>{};
+
+function setMode(m){
+  mode=m;$('#tSign').className=m==='signup'?'on':'';$('#tLog').className=m==='login'?'on':'';
+  $('#nameRow').hidden=m!=='signup';$('#go').textContent=m==='signup'?'Create free account':'Log in';
+  $('#pw').autocomplete=m==='signup'?'new-password':'current-password';$('#err').textContent='';
+}
+function show(){
+  const on=!!me;$('#auth').hidden=on;$('#app').hidden=!on;$('#who').hidden=!on;
+  if(on){$('#hi').textContent=me.name||me.email||'Creator';renderList()}else setMode(mode);
+}
+async function go(){
+  const email=$('#email').value.trim().toLowerCase(),pw=$('#pw').value,name=$('#name').value.trim();
+  const fail=m=>$('#err').textContent=m;
+  if(!backendReady())return fail('The secure account server is not connected. Configure API.base before using accounts.');
+  if(!/^\S+@\S+\.\S+$/.test(email))return fail('Enter a valid email.');
+  if(pw.length<8)return fail('Use at least 8 characters.');
+  try{
+    const r=await api(mode==='signup'?API.routes.signup:API.routes.login,{method:'POST',body:JSON.stringify(mode==='signup'?{name,email,password:pw}:{email,password:pw})});
+    me=r.user||r;$('#pw').value='';await loadLibrary();show();
+  }catch(e){fail(e.message)}
+}
+
+function renderPickers(){
+  const g=$('#styles');g.replaceChildren();
+  for(const k in STYLES){const s=STYLES[k];g.append(h('button',{class:'sty'+(k===style?' on':''),'aria-pressed':k===style,onclick:()=>{style=k;renderPickers()}},h('span',{},s.e),h('b',{},s.n),h('small',{},s.d)))}
+  renderVoice();upd();const qs=$('#qs');qs.replaceChildren();
+  for(const[v,l]of[[720,'HD'],[1080,'Full HD'],[1440,'QHD']])qs.append(h('button',{class:v===q?'on':'',onclick:()=>{q=v;renderPickers()}},h('b',{},v+'p'),h('small',{},l)));
+}
+function renderList(){
+  const L=$('#list');L.replaceChildren();renderDownloads();
+  $('#gen').disabled=P.some(x=>x.busy);
+  if(!P.length){L.append(h('p',{class:'note'},'Nothing yet. Your videos will show up here.'));return}
+  for(const p of P){
+    const s=STYLES[p.s]||STYLES.movie;
+    L.append(h('div',{class:'card vid'},
+      h('div',{class:'tile'+(p.busy?'':' done'),style:'background:linear-gradient(135deg,'+s.g+')'},h('span',{},s.e)),
+      h('div',{class:'info'},
+        h('div',{class:'t'},p.t),
+        h('div',{class:'chips'},h('i',{},s.n),h('i',{},fmtLen(p.len)),h('i',{},p.q+'p')),
+        p.busy?h('div',{},h('div',{class:'bar'},h('b',{style:'width:'+p.pct+'%'})),h('small',{},p.stage+' · '+Math.round(p.pct)+'%')):done(p)
+      ),
+      h('button',{class:'x','aria-label':'Delete video',onclick:()=>{if(p.busy)stopRender();dropFile(p);P=P.filter(x=>x!==p);save();renderList()}},'✕')
+    ));
+  }
+}
+async function loadLibrary(){
+  const r=await api(API.routes.videos);
+  cloudVideos=r.videos||r.items||[];
+  P=cloudVideos.map(v=>({id:v.id,t:v.prompt||v.title||'Generated video',s:v.style||'movie',len:v.duration||60,q:v.quality||1080,busy:['queued','processing'].includes(v.status),pct:v.progress||0,stage:v.status||'Ready',remoteUrl:v.downloadUrl||v.url}));
+  renderList();
+}
+async function writeStory(){
+  const prompt=$('#prompt').value.trim();
+  if(prompt.length<8){$('#hint').textContent='Describe your story idea first.';return}
+  if(!backendReady()){ $('#hint').textContent='AI story writing needs the ReelGen server. Configure API.base first.';return}
+  $('#writeStory').disabled=true;$('#hint').textContent='Writing story and scenes…';
+  try{
+    const r=await api(API.routes.story,{method:'POST',body:JSON.stringify({prompt,style,language:$('#language').value})});
+    $('#script').value=r.script||r.story||'';$('#scriptPanel').hidden=false;
+    const root=$('#scriptContent');root.replaceChildren(h('h3',{},r.title||'Untitled story'),h('p',{},r.logline||r.summary||''));
+    (r.scenes||[]).forEach((s,i)=>root.append(h('div',{class:'card'},h('b',{},'Scene '+(i+1)+': '+(s.title||'Untitled')),h('p',{},s.visual||s.description||''),h('p',{},s.dialogue||''))));
+    $('#hint').textContent='Story ready. Review and edit the script before generating.';
+  }catch(e){$('#hint').textContent=e.message}
+  finally{$('#writeStory').disabled=false}
+}
+function previewScript(){
+  const s=$('#script').value.trim();if(!s){$('#hint').textContent='Write or generate a script first.';return}
+  $('#scriptPanel').hidden=false;$('#scriptContent').replaceChildren(h('pre',{style:'white-space:pre-wrap;overflow-wrap:anywhere;font:inherit'},s));
+}
+async function gen(){
+  const prompt=$('#prompt').value.trim(),script=$('#script').value.trim();
+  if(prompt.length<8){$('#hint').textContent='Describe your video in a few words first.';return}
+  if(!backendReady()){ $('#hint').textContent='Real AI video generation is not connected. Configure the ReelGen backend before generating or advertising AI videos.';return}
+  $('#gen').disabled=true;$('#hint').textContent='Submitting video generation job…';
+  try{
+    const r=await api(API.routes.videos,{method:'POST',body:JSON.stringify({prompt,script,style,duration:+$('#len').value,quality:q,voice,language:$('#language').value})});
+    $('#hint').textContent='Job submitted. Rendering continues on the server.';
+    await loadLibrary();const id=r.id||r.video?.id;if(id)pollJob(id);
+  }catch(e){$('#hint').textContent=e.message}
+  finally{$('#gen').disabled=false}
+}
+async function pollJob(id){
+  for(let i=0;i<120;i++){
+    await new Promise(r=>setTimeout(r,5000));
+    try{const r=await api(API.routes.video(id));if(['completed','failed'].includes(r.status)){await loadLibrary();return}}
+    catch(e){return}
+  }
+}
+
+/* Legacy procedural canvas demo engine. It is NOT AI video generation and is not called by the production Generate AI video action. */
+const FILES={};let R=null,voice='female';
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const FRUIT={apple:'🍎',banana:'🍌',strawberry:'🍓',watermelon:'🍉',grape:'🍇',grapes:'🍇',orange:'🍊',lemon:'🍋',pineapple:'🍍',cherry:'🍒',peach:'🍑',mango:'🥭',kiwi:'🥝',coconut:'🥥',pear:'🍐',melon:'🍈',blueberry:'🫐'};
+const NAMES=['Kai','Mina','Rex','Luna','Juno','Orin','Zara','Theo'];
+const SKY=[['#ffd89b','#e07a5f'],['#8ee3f5','#5aa9e6'],['#ff6b6b','#3a0f1c'],['#7b4397','#2b5876'],['#ffe259','#ff7e5f'],['#ffd1dc','#fbc687']];
+const LINES=[
+ ['Our story begins…','{A} wakes up to a calm morning.','Tonight’s tale: “{T}”.','Life is peaceful. For now.'],
+ ['But something is stirring…','{A} notices a strange sign.','{B} appears from the shadows.','The plot thickens.'],
+ ['“Not so fast!” says {B}.','{A} and {B} clash!','The whole place shakes!','Neither side will back down.'],
+ ['Wait… that changes everything.','{A} discovers the truth.','{B} is not who they seemed.','A shocking turn of events!'],
+ ['This is {A}’s moment!','With all their courage, {A} strikes!','Everything comes down to now.','One last push!'],
+ ['Peace returns at last.','{A} and {B} learn something new.','And they all lived happily ever after.','The end.']
+];
+const VOICES=[['male','Male','Natural narration'],['female','Female','Natural narration'],['child','Child','Character voice'],['multi','Multiple','Cast voices'],['off','Silent','No narration']];
+function renderVoice(){const e=$('#vs');e.replaceChildren();for(const[v,l,d]of VOICES)e.append(h('button',{class:v===voice?'on':'',onclick:()=>{voice=v;renderPickers()}},h('b',{},l),h('small',{},d)))}
+function rng(str){let s=7;for(const ch of str)s=(s*31+ch.charCodeAt(0))>>>0;return()=>(s=(s*1664525+1013904223)>>>0)/4294967296}
+function plan(p){
+  const r=rng(p.s+p.t),pick=a=>a[Math.floor(r()*a.length)];
+  let a,b,ea,eb;
+  if(p.s==='fruits'){
+    const f=[...new Set((p.t.toLowerCase().match(/[a-z]+/g)||[]).filter(w=>FRUIT[w]))],all=Object.keys(FRUIT);
+    while(f.length<2){const x=pick(all);if(!f.includes(x))f.push(x)}
+    a=cap(f[0]);b=cap(f[1]);ea=FRUIT[f[0]];eb=FRUIT[f[1]];
+  }else{a=pick(NAMES);do b=pick(NAMES);while(b===a)}
+  return{a,b,ea,eb,T:p.t.length>48?p.t.slice(0,47)+'…':p.t,sl:Math.max(5,Math.min(20,p.len/6)),cp:Math.max(3,Math.min(6,p.len/12)),ha:pick(['#2b2d42','#e63946','#8d5524','#f4a261','#6a4c93']),hb:pick(['#2b2d42','#7209b7','#2a9d8f','#e9c46a'])};
+}
+function wrap(c,t,w){const o=[];let l='';for(const x of t.split(' ')){const n=l?l+' '+x:x;if(c.measureText(n).width>w&&l){o.push(l);l=x}else l=n}o.push(l);return o}
+function person(c,x,y,s,t,st,col,hair,talk,act){
+  const sw=Math.sin(t*6)*(act?.9:.3);
+  c.save();c.translate(x,y+Math.sin(t*3)*3);c.scale(s,s);c.lineCap='round';
+  c.fillStyle='rgba(0,0,0,.15)';c.beginPath();c.ellipse(0,98,52,10,0,0,7);c.fill();
+  c.strokeStyle=st==='stick'?'#222':col;c.lineWidth=st==='stick'?6:15;
+  for(const d of[-1,1]){
+    c.beginPath();c.moveTo(0,0);c.lineTo(d*28+sw*d*28,92);c.stroke();
+    c.beginPath();c.moveTo(0,-75);c.lineTo(d*48,-42+(act?-70*Math.max(0,Math.sin(t*9+d)):sw*d*18));c.stroke();
+  }
+  c.beginPath();c.moveTo(0,0);c.lineTo(0,-90);c.stroke();
+  c.beginPath();c.arc(0,-125,33,0,7);c.fillStyle=st==='stick'?'#fbfaf5':'#ffd9b8';c.fill();
+  if(st==='stick')c.stroke();else{c.fillStyle=hair;c.beginPath();c.arc(0,-130,36,Math.PI,0);c.fill()}
+  for(const d of[-1,1]){
+    if(st==='stick'){c.fillStyle='#222';c.beginPath();c.arc(d*12,-128,3.5,0,7);c.fill()}
+    else{c.fillStyle='#fff';c.beginPath();c.ellipse(d*13,-122,8,st==='anime'?12:9,0,0,7);c.fill();c.fillStyle=st==='anime'?'#3a6ea5':'#3b2f2f';c.beginPath();c.arc(d*13,-120,5,0,7);c.fill();c.fillStyle='#fff';c.fillRect(d*13-3,-125,3,3)}
+  }
+  c.strokeStyle=st==='stick'?'#222':'#a33';c.lineWidth=3;c.beginPath();c.arc(0,-112,talk?5+3*Math.abs(Math.sin(t*14)):6,.1,Math.PI-.1);c.stroke();
+  c.restore();
+}
+function fruit(c,x,y,e,t,flip,talk,i){
+  c.save();c.translate(x,y-Math.abs(Math.sin(t*4+i))*(talk?30:14));if(flip)c.scale(-1,1);
+  c.fillStyle='#000';c.font='190px serif';c.textAlign='center';c.textBaseline='middle';c.fillText(e,0,0);
+  for(const d of[-1,1]){c.fillStyle='#fff';c.beginPath();c.arc(d*34,-18,17,0,7);c.fill();c.fillStyle='#111';c.beginPath();c.arc(d*34+4,-16,8,0,7);c.fill()}
+  c.strokeStyle='#5a1a1a';c.lineWidth=5;c.lineCap='round';c.beginPath();c.arc(0,22,talk?16+6*Math.abs(Math.sin(t*14)):18,.15,Math.PI-.15);c.stroke();
+  c.restore();
+}
+function frame(c,W,t,p,pl){
+  const len=p.len,beat=Math.min(5,Math.floor(t/len*6)),sl=pl.sl,ts=t%sl,u=ts/sl,st=p.s,si=Math.floor(t/sl),ci=Math.floor(t/pl.cp),talkA=ci%2===0,act=beat===2||beat===4;
+  c.save();c.scale(W/1280,W/1280);
+  const g=c.createLinearGradient(0,0,0,720),[c1,c2]=st==='stick'?['#fdfcf7','#e8e6da']:SKY[beat];
+  g.addColorStop(0,c1);g.addColorStop(1,c2);c.fillStyle=g;c.fillRect(0,0,1280,720);
+  c.save();const z=1+.05*u;c.translate(640,360);c.scale(z,z);c.translate(-640,-360);
+  if(st==='stick'){
+    c.strokeStyle='#222';c.lineWidth=4;c.beginPath();c.moveTo(0,600);c.lineTo(1280,600);c.stroke();
+    c.beginPath();c.arc(1080,130,44,0,7);c.stroke();
+    for(let k=0;k<8;k++){const a=k*.785+t*.3;c.beginPath();c.moveTo(1080+Math.cos(a)*58,130+Math.sin(a)*58);c.lineTo(1080+Math.cos(a)*78,130+Math.sin(a)*78);c.stroke()}
+  }else{
+    c.fillStyle='rgba(255,255,255,.5)';
+    for(let k=0;k<5;k++){const x=((k*330+t*(14+k*3)+si*97)%1700)-200;c.beginPath();c.ellipse(x,90+(k*37)%160,70,24,0,0,7);c.fill()}
+    for(let l=0;l<2;l++){c.fillStyle=l?'rgba(0,0,0,.28)':'rgba(0,0,0,.14)';c.beginPath();c.moveTo(0,720);for(let x=0;x<=1280;x+=40)c.lineTo(x,470+l*60+Math.sin(x/170+si*2+l*3)*(40+l*20));c.lineTo(1280,720);c.fill()}
+    if(st==='fruits'){c.fillStyle='#6cc070';c.fillRect(0,590,1280,130)}
+    if(st==='anime'){
+      if(act){c.strokeStyle='rgba(255,255,255,.55)';c.lineWidth=3;for(let k=0;k<36;k++){const a=k*.1745+Math.sin(t*20+k)*.02;c.beginPath();c.moveTo(640+Math.cos(a)*260,360+Math.sin(a)*260);c.lineTo(640+Math.cos(a)*900,360+Math.sin(a)*900);c.stroke()}}
+      c.fillStyle='rgba(255,182,193,.9)';for(let k=0;k<26;k++){c.beginPath();c.ellipse((k*97+t*40+k*k*13)%1300,(k*53+t*60)%740,7,4,t+k,0,7);c.fill()}
+    }
+  }
+  const gap=[420,380,230,320,170,300][beat],sh=act?Math.sin(t*38)*4:0,jp=beat===5?-Math.abs(Math.sin(t*5))*34:0,ax=640-gap/2+sh+Math.sin(t*2)*10,bx=640+gap/2-sh-Math.sin(t*2)*10;
+  if(st==='fruits'){fruit(c,ax,430+jp,pl.ea,t,false,talkA,0);fruit(c,bx,430+jp,pl.eb,t,true,!talkA,1)}
+  else{person(c,ax,465+jp,1.45,t,st,'#e76f51',pl.ha,talkA,act);person(c,bx,465+jp,1.45,t,st,'#2a9d8f',pl.hb,!talkA,act)}
+  if(beat===5){for(let k=0;k<40;k++){c.fillStyle='hsl('+k*47+',90%,60%)';c.fillRect((k*83+Math.sin(t+k)*30)%1280,(t*120+k*37)%720,8,12)}}
+  c.restore();
+  const f=Math.min(ts/.4,(sl-ts)/.4,1);
+  if(f<1){c.fillStyle='rgba('+(st==='stick'?'255,255,255':'0,0,0')+','+(1-f)*.8+')';c.fillRect(0,0,1280,720)}
+  if(st==='movie'){const v=c.createRadialGradient(640,360,300,640,360,800);v.addColorStop(0,'rgba(0,0,0,0)');v.addColorStop(1,'rgba(0,0,0,.55)');c.fillStyle=v;c.fillRect(0,0,1280,720);c.fillStyle='#000';c.fillRect(0,0,1280,70);c.fillRect(0,650,1280,70)}
+  const line=LINES[beat][ci%4].replace('{A}',pl.a).replace('{B}',pl.b).replace('{T}',()=>pl.T),kk=Math.floor((t%pl.cp)*22);
+  c.font='700 38px system-ui,sans-serif';c.textAlign='center';c.textBaseline='middle';
+  const ls=wrap(c,line,1000),bh=ls.length*46+20,by=(st==='movie'?632:690)-bh,bw=Math.max(...ls.map(l=>c.measureText(l).width))+50;
+  c.fillStyle=st==='stick'?'rgba(255,255,255,.88)':'rgba(0,0,0,.6)';c.beginPath();c.roundRect?c.roundRect(640-bw/2,by,bw,bh,16):c.rect(640-bw/2,by,bw,bh);c.fill();
+  c.fillStyle=st==='stick'?'#222':'#fff';let left=kk;ls.forEach((l,i)=>{c.fillText(l.slice(0,Math.max(0,left)),640,by+33+i*46);left-=l.length+1});
+  if(t<3||t>len-2.5){
+    const a=t<3?Math.min(1,(3-t)/.8):Math.min(1,(t-(len-2.5))/.8);
+    c.globalAlpha=a;c.fillStyle='#0a0819';c.fillRect(0,0,1280,720);c.fillStyle='#fff';c.font='800 54px system-ui,sans-serif';
+    if(t<3){const tl=wrap(c,p.t.length>90?p.t.slice(0,89)+'…':p.t,1000);tl.forEach((l,i)=>c.fillText(l,640,360+(i-(tl.length-1)/2)*66))}else c.fillText('THE END',640,360);
+    c.globalAlpha=1;
+  }
+  c.restore();
+  return{ci,line,beat};
+}
+function mkSound(kind){
+  const A=new(window.AudioContext||window.webkitAudioContext)(),dest=A.createMediaStreamDestination(),m=A.createGain();
+  m.gain.value=.8;m.connect(dest);m.connect(A.destination);A.resume();
+  const base={male:112,female:215,child:330}[kind],fs={male:1,female:1.16,child:1.35}[kind];
+  const V={a:[800,1200],e:[500,1900],i:[300,2300],o:[500,900],u:[330,800]};
+  const nb=A.createBuffer(1,Math.floor(A.sampleRate*.15),A.sampleRate),nd=nb.getChannelData(0);
+  for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
+  const env=(g,at,pk,d)=>{g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(pk,at+.012);g.gain.exponentialRampToValueAtTime(.001,at+d)};
+  const syl=(at,F,f0)=>{const o=A.createOscillator(),g=A.createGain();o.type='sawtooth';o.frequency.setValueAtTime(f0,at);o.frequency.linearRampToValueAtTime(f0*1.06,at+.1);env(g,at,.9,.11);for(const fr of F){const b=A.createBiquadFilter();b.type='bandpass';b.frequency.value=fr*fs;b.Q.value=6;o.connect(b);b.connect(g)}g.connect(m);o.start(at);o.stop(at+.13)};
+  const hiss=at=>{const s=A.createBufferSource(),f=A.createBiquadFilter(),g=A.createGain();s.buffer=nb;f.type='highpass';f.frequency.value=3500;env(g,at,.25,.05);s.connect(f);f.connect(g);g.connect(m);s.start(at);s.stop(at+.06)};
+  return{
+    stream:dest.stream,
+    say(line,isA){let at=A.currentTime+.05;const f=base*(isA?1:1.12);for(const ch of line.toLowerCase()){if(V[ch])syl(at,V[ch],f*(.9+Math.random()*.22));else if('sfhtkpcxz'.includes(ch))hiss(at);at+=1/22}},
+    chord(beat,ci,dur){
+      const at=A.currentTime+.02,minor=beat===2||beat===3,r=[60,62,57,55,64,65][beat]+[0,5,7,3][ci%4];
+      for(const n of[0,minor?3:4,7]){const o=A.createOscillator(),g=A.createGain();o.type='triangle';o.frequency.value=440*2**((r+n-69)/12);g.gain.setValueAtTime(0,at);g.gain.linearRampToValueAtTime(.07,at+.5);g.gain.linearRampToValueAtTime(0,at+dur+.4);o.connect(g);g.connect(m);o.start(at);o.stop(at+dur+.5)}
+      if(beat===2||beat===4){const o=A.createOscillator(),g=A.createGain();o.frequency.setValueAtTime(140,at);o.frequency.exponentialRampToValueAtTime(40,at+.25);g.gain.setValueAtTime(.7,at);g.gain.exponentialRampToValueAtTime(.001,at+.3);o.connect(g);g.connect(m);o.start(at);o.stop(at+.35)}
+    },
+    close(){try{A.close()}catch(e){}}
+  };
+}
+function render(p){
+  const fail=m=>{P=P.filter(x=>x!==p);R=null;$('#stage').hidden=true;$('#hint').textContent=m;renderList()};
+  if(typeof MediaRecorder==='undefined'||!HTMLCanvasElement.prototype.captureStream)return fail('This browser can’t record video. Try a recent Chrome, Edge, Safari or Firefox.');
+  const W=Math.round(p.q*16/9),cv=$('#cv');cv.width=W;cv.height=p.q;
+  const c=cv.getContext('2d'),pl=plan(p),chunks=[];
+  let snd=null,stream=cv.captureStream(30);
+  if(p.voice!=='off'){try{snd=mkSound(p.voice);stream=new MediaStream([...stream.getVideoTracks(),...snd.stream.getAudioTracks()])}catch(e){snd=null}}
+  const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm','video/mp4'].find(m=>MediaRecorder.isTypeSupported(m))||'';
+  let rec;
+  try{rec=new MediaRecorder(stream,mime?{mimeType:mime,videoBitsPerSecond:{720:1.5e6,1080:2.5e6,1440:4e6}[p.q]}:{})}catch(e){if(snd)snd.close();return fail('Couldn’t start the video recorder on this device.')}
+  R={p,rec,stop:false};
+  try{if(navigator.wakeLock)navigator.wakeLock.request('screen').then(l=>{if(R&&R.p===p)R.wl=l;else l.release()}).catch(()=>{})}catch(e){}
+  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  rec.onstop=()=>{
+    clearInterval(timer);if(snd)snd.close();if(R&&R.wl)R.wl.release().catch(()=>{});$('#stage').hidden=true;
+    if(R&&R.stop){R=null;P=P.filter(x=>x!==p);renderList();return}
+    const type=rec.mimeType||mime||'video/webm',blob=new Blob(chunks,{type});
+    FILES[p.id]={blob,url:URL.createObjectURL(blob),ext:type.includes('mp4')?'mp4':'webm'};
+    p.busy=false;p.pct=100;R=null;save();renderList();
+  };
+  $('#stage').hidden=false;rec.start(1000);
+  const t0=performance.now();let vc=-1,mc=-1;
+  timer=setInterval(()=>{
+    const t=(performance.now()-t0)/1000;
+    if(t>=p.len||R.stop){if(rec.state!=='inactive')rec.stop();clearInterval(timer);return}
+    const f=frame(c,W,t,p,pl);
+    if(snd){
+      if(f.ci!==mc){mc=f.ci;snd.chord(f.beat,f.ci,pl.cp)}
+      if(t>=3&&t<p.len-2.5&&f.ci!==vc){vc=f.ci;snd.say(f.line,f.ci%2===0)}
+    }
+    const s=Math.floor(t);
+    if(s!==p.sec){p.sec=s;p.pct=t/p.len*100;p.stage='Rendering '+fmtLen(s)+' of '+fmtLen(p.len);$('#st').textContent=document.hidden?'Tab hidden: return here so frames keep rendering':p.stage;renderList()}
+  },33);
+}
+function stopRender(){if(R){R.stop=true;if(R.rec.state!=='inactive')R.rec.stop()}clearInterval(timer)}
+function done(p){
+  if(p.remoteUrl)return h('div',{},h('small',{class:'ok'},'✓ Cloud video ready'),
+    h('div',{class:'acts'},h('button',{class:'ghost',onclick:()=>watchRemote(p.remoteUrl)},'▶ Watch'),
+    h('button',{class:'ghost',onclick:()=>GenDownload(p.remoteUrl,p.t)},'Download')));
+  const f=FILES[p.id];
+  if(!f)return h('small',{},'The file isn’t kept after the tab closes. Generate it again.');
+  return h('div',{},h('small',{class:'ok'},'✓ Ready · '+(f.blob.size/1048576).toFixed(1)+' MB'),
+    h('div',{class:'acts'},h('button',{class:'ghost',onclick:()=>watch(f)},'▶ Watch'),h('button',{class:'ghost',onclick:()=>dl(p,f)},'Download')));
+}
+function watch(f){const v=$('#plv');v.src=f.url;$('#pl').hidden=false;v.play().catch(()=>{})}
+function watchRemote(url){const v=$('#plv');v.src=url;$('#pl').hidden=false;v.play().catch(()=>{})}
+function GenDownload(url,name){const a=h('a',{href:url,download:(name||'reelgen-video').slice(0,40)+'.mp4',target:'_blank',rel:'noopener'});document.body.append(a);a.click();a.remove()}
+async function dl(p,f){
+  const name=fname(p,f);
+  try{const d=typeof claude!=='undefined'?await claude.use('downloads'):null;if(d){await d.save({filename:name,data:f.blob});return true}}
+  catch(e){if(e&&e.code==='declined')return false}
+  const a=h('a',{href:f.url,download:name});document.body.append(a);a.click();a.remove();
+  if(typeof claude!=='undefined')$('#hint').textContent='If nothing was saved, open the published page in your own browser tab and try again.';
+  return true;
+}
+function fname(p,f){return 'reelgen-'+(p.t.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,32)||p.s)+'-'+String(p.id).slice(-4)+'.'+f.ext}
+function dropFile(p){const f=FILES[p.id];if(f){URL.revokeObjectURL(f.url);delete FILES[p.id]}}
+async function dlAll(){for(const p of P){const f=FILES[p.id];if(!p.busy&&f){if(!(await dl(p,f)))break;await new Promise(r=>setTimeout(r,400))}}}
+function renderDownloads(){
+  const D=$('#dls');D.replaceChildren();
+  const rdy=P.filter(p=>!p.busy&&FILES[p.id]);
+  if(!rdy.length){D.append(h('p',{class:'note'},'Finished videos appear here, ready to save to your device.'));return}
+  for(const p of rdy){
+    const f=FILES[p.id];
+    D.append(h('div',{class:'dl'},
+      h('div',{class:'dn'},h('b',{},fname(p,f)),h('small',{},STYLES[p.s].n+' · '+fmtLen(p.len)+' · '+p.q+'p · '+(f.blob.size/1048576).toFixed(1)+' MB · '+f.ext.toUpperCase())),
+      h('button',{class:'ghost',onclick:()=>dl(p,f)},'Download')));
+  }
+  D.append(h('div',{class:'row'},h('small',{},rdy.length+(rdy.length>1?' files':' file')),rdy.length>1?h('button',{class:'ghost',onclick:dlAll},'Download all'):''));
+  D.append(h('p',{class:'note'},'WebM plays in Chrome, Edge, Firefox and VLC; Safari saves MP4. Videos live in this tab until you close it, so download what you want to keep.'));
+}
+function upd(){const s=+$('#len').value,b={720:1.5,1080:2.5,1440:4}[q]+(voice==='off'?0:.13);$('#lenV').textContent=fmtLen(s)+' · ≈ '+Math.round(s*b/8)+' MB'}
+$('#cancel').onclick=stopRender;
+addEventListener('beforeunload',e=>{if(R){e.preventDefault();e.returnValue=''}});
+$('#plx').onclick=()=>{$('#pl').hidden=true;const v=$('#plv');v.pause();v.removeAttribute('src');v.load()};
+$('#plv').onerror=()=>{if($('#pl').hidden)return;$('#pl').hidden=true;$('#hint').textContent='Playback isn’t available in this view. Use Download to save the video.'};
+
+$('#tSign').onclick=()=>setMode('signup');
+$('#tLog').onclick=()=>setMode('login');
+$('#go').onclick=go;
+for(const id of['#name','#email','#pw'])$(id).addEventListener('keydown',e=>{if(e.key==='Enter')go()});
+$('#out').onclick=async()=>{try{await api(API.routes.logout,{method:'POST',body:'{}'})}catch(e){}me=null;P=[];show()};
+$('#len').oninput=upd;
+$('#gen').onclick=gen;
+$('#writeStory').onclick=writeStory;
+$('#previewScript').onclick=previewScript;
+$('#useScript').onclick=()=>{$('#scriptPanel').hidden=true;$('#hint').textContent='Script selected.'};
+
+$('#lenV').textContent=fmtLen(60);
+renderPickers();
+(async()=>{
+  if(!backendReady()){
+    $('#auth').hidden=false;$('#app').hidden=true;$('#who').hidden=true;
+    $('#err').textContent='Setup mode: connect the secure ReelGen API to enable accounts and AI features.';
+    return;
+  }
+  try{const r=await api(API.routes.me);me=r.user||r;await loadLibrary()}catch(e){me=null}
+  show();
+})();
+</script>
+</body>
+</html>
